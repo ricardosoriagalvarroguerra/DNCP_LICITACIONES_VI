@@ -28,82 +28,84 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Barra de búsqueda
-id_search = st.text_input("Ingrese el ID de la licitación:")
+# Menú de navegación
+opcion = st.sidebar.radio(
+    "Selecciona una página:",
+    ["Inicio", "Filtro Avanzado", "Detalles Expansibles", "Tablas Expandibles"]
+)
 
-# Buscar información si se ingresa un ID
-if id_search:
-    st.markdown(f"<h3 style='color: #003366;'>Resultados para ID: {id_search}</h3>", unsafe_allow_html=True)
-    st.divider()
+# Página: Inicio
+if opcion == "Inicio":
+    st.title("Bienvenido a la Aplicación de Licitaciones")
+    st.write("Selecciona una opción desde el menú de navegación para explorar la información.")
+    st.write("Desarrollado para visualizar datos clave de forma ordenada y eficiente.")
 
-    # Datos de licitaciones
-    licitacion_data = licitaciones[licitaciones['id'] == id_search]
-    if not licitacion_data.empty:
-        st.markdown("### Información de la Licitación")
-        st.divider()
-        with st.container():
-            st.markdown(f"**Proyecto:** {licitacion_data.iloc[0]['nombre_proyecto']}")
-            st.markdown(f"**Criterio:** {licitacion_data.iloc[0]['criterio']}")
-            st.markdown(f"**Tipo:** {licitacion_data.iloc[0]['tipo']}")
-            st.markdown(f"**Monto Estimado (GS):** {licitacion_data.iloc[0]['estimado_GS']:,}")
-            st.markdown(f"**Monto Adjudicado (GS):** {licitacion_data.iloc[0]['adjudicado_GS']:,}")
-            st.markdown(f"**Cantidad de Oferentes:** {licitacion_data.iloc[0]['oferentes_cantidad']}")
-            st.markdown(f"**Cantidad de Lotes:** {licitacion_data.iloc[0]['cant_lotes']}")
-    else:
-        st.warning("No se encontró información en la tabla de licitaciones.")
+# Página: Filtro Avanzado
+elif opcion == "Filtro Avanzado":
+    st.title("Filtro Avanzado de Licitaciones")
+    
+    # Filtro por tipo de licitación
+    tipo = st.selectbox("Selecciona el Tipo de Licitación:", licitaciones['tipo'].unique())
+    
+    # Filtro por rango de fechas
+    min_fecha = st.date_input("Fecha de publicación mínima:", licitaciones['fecha_publicacion'].min())
+    max_fecha = st.date_input("Fecha de publicación máxima:", licitaciones['fecha_publicacion'].max())
+    
+    # Aplicar filtros
+    licitaciones_filtradas = licitaciones[
+        (licitaciones['tipo'] == tipo) & 
+        (licitaciones['fecha_publicacion'] >= min_fecha) &
+        (licitaciones['fecha_publicacion'] <= max_fecha)
+    ]
+    
+    # Mostrar resultados
+    st.markdown(f"### Resultados Filtrados ({len(licitaciones_filtradas)})")
+    st.dataframe(licitaciones_filtradas)
 
-    st.divider()
+# Página: Detalles Expansibles
+elif opcion == "Detalles Expansibles":
+    st.title("Detalles Expansibles de Licitaciones")
+    
+    # Mostrar tabla principal
+    st.markdown("### Tabla de Licitaciones")
+    licitaciones_table = licitaciones[['id', 'nombre_proyecto', 'oferentes_cantidad', 'cant_lotes']]
+    st.dataframe(licitaciones_table)
 
-    # Datos de adjudicado
-    adjudicado_data = adjudicado[adjudicado['id'] == id_search]
-    if not adjudicado_data.empty:
-        st.markdown("### Información de Adjudicación")
-        st.divider()
-        with st.container():
-            st.markdown(f"**Fecha de Adjudicación:** {adjudicado_data.iloc[0]['fecha_adjudicacion']}")
-            st.markdown(f"**Monto Adjudicado (GS):** {adjudicado_data.iloc[0]['value_amount_GS']:,}")
-            st.markdown(f"**Oferente Adjudicado:** {adjudicado_data.iloc[0]['name_oferente']}")
-    else:
-        st.warning("No se encontró información en la tabla de adjudicación.")
+    # Selección de fila
+    fila_seleccionada = st.selectbox("Selecciona un ID de Licitación para Detalles:", licitaciones_table['id'])
+    
+    if fila_seleccionada:
+        st.markdown(f"### Detalles para la Licitación ID: {fila_seleccionada}")
+        
+        # Mostrar oferentes
+        oferentes_relacionados = oferentes[oferentes['id'] == fila_seleccionada]
+        st.markdown("**Oferentes:**")
+        st.dataframe(oferentes_relacionados[['name', 'address_countryName']])
+        
+        # Mostrar lotes
+        lotes_relacionados = lotes[lotes['id'] == fila_seleccionada]
+        st.markdown("**Lotes:**")
+        st.dataframe(lotes_relacionados[['title', 'value_amount_GS']])
 
-    st.divider()
-
-    # Datos de lotes
-    lotes_data = lotes[lotes['id'] == id_search]
-    if not lotes_data.empty:
-        st.markdown("### Información de los Lotes")
-        st.divider()
-        for _, row in lotes_data.iterrows():
-            with st.container():
-                st.markdown(f"**Título del Lote:** {row['title']}")
-                st.markdown(f"**Monto del Lote (GS):** {row['value_amount_GS']:,}")
-                st.divider()
-    else:
-        st.warning("No se encontró información en la tabla de lotes.")
-
-    # Datos de oferentes
-    oferentes_ids = lotes_data['id'].unique() if not lotes_data.empty else []
-    oferentes_data = oferentes[oferentes['id'].isin(oferentes_ids)]
-    if not oferentes_data.empty:
-        st.markdown("### Información de los Oferentes")
-        st.divider()
-        for _, row in oferentes_data.iterrows():
-            with st.container():
-                st.markdown(f"**Nombre:** {row['name']}")
-                st.markdown(f"**País:** {row['address_countryName']}")
-                st.divider()
-    else:
-        st.warning("No se encontró información en la tabla de oferentes.")
-
-    st.divider()
-
-    # Cargar Acta de Apertura
-    acta_data = actas[actas['id'] == id_search]
-    if not acta_data.empty:
-        acta_url = acta_data.iloc[0]['url']
-        st.markdown("### Acta de Apertura")
-        st.divider()
-        if st.button("Abrir Acta de Apertura"):
-            webbrowser.open_new_tab(acta_url)
-    else:
-        st.warning("No se encontró el Acta de Apertura para esta licitación.")
+# Página: Tablas Expandibles
+elif opcion == "Tablas Expandibles":
+    st.title("Tablas Expandibles de Licitaciones")
+    
+    # Mostrar tabla de licitaciones
+    st.markdown("### Licitaciones")
+    for _, row in licitaciones.iterrows():
+        with st.expander(f"Proyecto: {row['nombre_proyecto']} (ID: {row['id']})"):
+            st.markdown(f"**Criterio:** {row['criterio']}")
+            st.markdown(f"**Tipo:** {row['tipo']}")
+            st.markdown(f"**Estimado (GS):** {row['estimado_GS']}")
+            st.markdown(f"**Adjudicado (GS):** {row['adjudicado_GS']}")
+            
+            # Detalles de adjudicados
+            adjudicados_relacionados = adjudicado[adjudicado['id'] == row['id']]
+            st.markdown("**Adjudicados:**")
+            st.dataframe(adjudicados_relacionados[['name_oferente', 'value_amount_GS']])
+            
+            # Detalles de oferentes
+            oferentes_relacionados = oferentes[oferentes['id'] == row['id']]
+            st.markdown("**Oferentes:**")
+            st.dataframe(oferentes_relacionados[['name', 'address_countryName']])
