@@ -13,57 +13,74 @@ lotes = load_data('lotes')
 oferentes = load_data('oferentes')
 actas = load_data('actas')
 
+# Estilo general de la página
+st.set_page_config(page_title="Buscador de Licitaciones", layout="centered")
+
 # Título de la app
-st.title("Buscador de Licitaciones")
+st.markdown(
+    """
+    <div style="text-align: center;">
+        <h1 style="color: #003366;">Buscador de Licitaciones</h1>
+        <p style="color: #666;">Encuentra información detallada de las licitaciones, adjudicaciones, lotes y oferentes.</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
 
 # Barra de búsqueda
-id_search = st.text_input("Ingrese el ID de la licitación:")
+id_search = st.text_input("🔍 Ingrese el ID de la licitación:")
 
 # Buscar información si se ingresa un ID
 if id_search:
-    st.subheader(f"Resultados para ID: {id_search}")
+    st.markdown(f"<h3 style='color: #003366;'>Resultados para ID: {id_search}</h3>", unsafe_allow_html=True)
 
     # Datos de licitaciones
     licitacion_data = licitaciones[licitaciones['id'] == id_search]
     if not licitacion_data.empty:
-        st.markdown("### Información de la Licitación")
-        st.write(f"**Proyecto:** {licitacion_data.iloc[0]['nombre_proyecto']}")
-        st.write(f"**Criterio:** {licitacion_data.iloc[0]['criterio']}")
-        st.write(f"**Tipo:** {licitacion_data.iloc[0]['tipo']}")
-        st.write(f"**Monto Estimado (GS):** {licitacion_data.iloc[0]['estimado_GS']}")
-        st.write(f"**Monto Adjudicado (GS):** {licitacion_data.iloc[0]['adjudicado_GS']}")
-        st.write(f"**Cantidad de Oferentes:** {licitacion_data.iloc[0]['oferentes_cantidad']}")
-        st.write(f"**Cantidad de Lotes:** {licitacion_data.iloc[0]['cant_lotes']}")
+        st.markdown("### 📝 Información de la Licitación")
+        with st.container():
+            st.markdown(f"**Proyecto:** {licitacion_data.iloc[0]['nombre_proyecto']}")
+            st.markdown(f"**Criterio:** {licitacion_data.iloc[0]['criterio']}")
+            st.markdown(f"**Tipo:** {licitacion_data.iloc[0]['tipo']}")
+            st.markdown(f"**Monto Estimado (GS):** {licitacion_data.iloc[0]['estimado_GS']:,}")
+            st.markdown(f"**Monto Adjudicado (GS):** {licitacion_data.iloc[0]['adjudicado_GS']:,}")
+            st.markdown(f"**Cantidad de Oferentes:** {licitacion_data.iloc[0]['oferentes_cantidad']}")
+            st.markdown(f"**Cantidad de Lotes:** {licitacion_data.iloc[0]['cant_lotes']}")
     else:
-        st.write("No se encontró información en la tabla de licitaciones.")
+        st.warning("⚠️ No se encontró información en la tabla de licitaciones.")
 
     # Datos de adjudicado
     adjudicado_data = adjudicado[adjudicado['id'] == id_search]
     if not adjudicado_data.empty:
-        st.markdown("### Información de Adjudicación")
-        st.write(f"**Fecha de Adjudicación:** {adjudicado_data.iloc[0]['fecha_adjudicacion']}")
-        st.write(f"**Monto Adjudicado (GS):** {adjudicado_data.iloc[0]['value_amount_GS']}")
-        st.write(f"**Oferente Adjudicado:** {adjudicado_data.iloc[0]['name_oferente']}")
+        st.markdown("### 🏆 Información de Adjudicación")
+        with st.container():
+            st.markdown(f"**Fecha de Adjudicación:** {adjudicado_data.iloc[0]['fecha_adjudicacion']}")
+            st.markdown(f"**Monto Adjudicado (GS):** {adjudicado_data.iloc[0]['value_amount_GS']:,}")
+            st.markdown(f"**Oferente Adjudicado:** {adjudicado_data.iloc[0]['name_oferente']}")
     else:
-        st.write("No se encontró información en la tabla de adjudicación.")
+        st.warning("⚠️ No se encontró información en la tabla de adjudicación.")
 
     # Datos de lotes
     lotes_data = lotes[lotes['id'] == id_search]
     if not lotes_data.empty:
-        st.markdown("### Información de los Lotes")
+        st.markdown("### 📦 Información de los Lotes")
         for _, row in lotes_data.iterrows():
-            st.write(f"**Título del Lote:** {row['title']}")
-            st.write(f"**Monto del Lote (GS):** {row['value_amount_GS']}")
+            st.markdown("---")
+            with st.container():
+                st.markdown(f"**Título del Lote:** {row['title']}")
+                st.markdown(f"**Monto del Lote (GS):** {row['value_amount_GS']:,}")
     else:
-        st.write("No se encontró información en la tabla de lotes.")
+        st.warning("⚠️ No se encontró información en la tabla de lotes.")
 
     # Datos de oferentes
     oferentes_ids = lotes_data['id'].unique() if not lotes_data.empty else []
     oferentes_data = oferentes[oferentes['id'].isin(oferentes_ids)]
     if not oferentes_data.empty:
-        st.markdown("### Información de los Oferentes")
+        st.markdown("### 👤 Información de los Oferentes")
         for _, row in oferentes_data.iterrows():
-            st.write(f"**Nombre:** {row['name']}")
-            st.write(f"**País:** {row['address_countryName']}")
+            st.markdown("---")
+            with st.container():
+                st.markdown(f"**Nombre:** {row['name']}")
+                st.markdown(f"**País:** {row['address_countryName']}")
     else:
-        st.write("No se encontró información en la tabla de oferentes.")
+        st.warning("⚠️ No se encontró información en la tabla de oferentes.")
