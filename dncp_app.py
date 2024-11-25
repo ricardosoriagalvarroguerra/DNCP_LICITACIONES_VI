@@ -95,16 +95,12 @@ elif opcion == "Detalles Expansibles":
 elif opcion == "Tablas Expandibles":
     st.title("Tablas Expandibles de Licitaciones")
 
-    # Filtros
-    min_monto = st.number_input("Monto mínimo (GS):", min_value=0, value=0)
-    max_monto = st.number_input("Monto máximo (GS):", min_value=0, value=int(licitaciones['estimado_GS'].max()))
+    # Filtros por año y tipo
     anio = st.selectbox("Año de la Licitación:", licitaciones['fecha_publicacion'].dt.year.unique())
     tipo = st.selectbox("Tipo de Licitación:", licitaciones['tipo'].unique())
 
     # Aplicar filtros
     licitaciones_filtradas = licitaciones[
-        (licitaciones['estimado_GS'] >= min_monto) &
-        (licitaciones['estimado_GS'] <= max_monto) &
         (licitaciones['fecha_publicacion'].dt.year == anio) &
         (licitaciones['tipo'] == tipo)
     ]
