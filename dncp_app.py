@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import datetime
 
 # Configuración de la página
 st.set_page_config(page_title="Aplicación de Licitaciones", layout="centered")
@@ -16,17 +15,6 @@ adjudicado = load_data('adjudicado')
 lotes = load_data('lotes')
 oferentes = load_data('oferentes')
 actas = load_data('actas')
-
-# Título de la app
-st.markdown(
-    """
-    <div style="text-align: center;">
-        <h1 style="color: #003366;">Buscador y Gestión de Licitaciones</h1>
-        <p style="color: #666;">Explora información detallada de licitaciones, adjudicaciones, lotes y oferentes.</p>
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
 
 # Menú de navegación
 opcion = st.sidebar.radio(
@@ -50,7 +38,7 @@ if opcion == "Buscador por ID":
             st.write(f"**Monto Adjudicado (GS):** {licitacion_data.iloc[0]['adjudicado_GS']:,}")
             st.write(f"**Cantidad de Oferentes:** {licitacion_data.iloc[0]['oferentes_cantidad']}")
             st.write(f"**Cantidad de Lotes:** {licitacion_data.iloc[0]['cant_lotes']}")
-            
+
             acta_data = actas[actas['id'] == id_search]
             if not acta_data.empty:
                 acta_url = acta_data.iloc[0]['url']
@@ -107,12 +95,13 @@ elif opcion == "Detalles Expansibles":
 elif opcion == "Tablas Expandibles":
     st.title("Tablas Expandibles de Licitaciones")
 
-    # Filtros por monto, año y tipo
+    # Filtros
     min_monto = st.number_input("Monto mínimo (GS):", min_value=0, value=0)
     max_monto = st.number_input("Monto máximo (GS):", min_value=0, value=int(licitaciones['estimado_GS'].max()))
     anio = st.selectbox("Año de la Licitación:", licitaciones['fecha_publicacion'].dt.year.unique())
     tipo = st.selectbox("Tipo de Licitación:", licitaciones['tipo'].unique())
-    
+
+    # Aplicar filtros
     licitaciones_filtradas = licitaciones[
         (licitaciones['estimado_GS'] >= min_monto) &
         (licitaciones['estimado_GS'] <= max_monto) &
@@ -128,5 +117,24 @@ elif opcion == "Tablas Expandibles":
 
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
-    st.markdown(f"### Mostrando página {page} de {total_pages}")
-    st.dataframe(licitaciones_filtradas.iloc[start_idx:end_idx])
+    licitaciones_paginadas = licitaciones_filtradas.iloc[start_idx:end_idx]
+
+    # Mostrar datos expandibles
+    for _, row in licitaciones_paginadas.iterrows():
+        with st.expander(f"Proyecto: {row['nombre_proyecto']} (ID: {row['id']})"):
+            st.markdown(f"**Criterio:** {row['criterio']}")
+            st.markdown(f"**Tipo:** {row['tipo']}")
+            st.markdown(f"**Estimado (GS):** {row['estimado_GS']}")
+            st.markdown(f"**Adjudicado (GS):** {row['adjudicado_GS']}")
+
+            # Detalles de adjudicados
+            adjudicados_relacionados = adjudicado[adjudicado['id'] == row['id']]
+            if not adjudicados_relacionados.empty:
+                st.markdown("**Adjudicados:**")
+                st.dataframe(adjudicados_relacionados[['name_oferente', 'value_amount_GS']])
+
+            # Detalles de oferentes
+            oferentes_relacionados = oferentes[oferentes['id'] == row['id']]
+            if not oferentes_relacionados.empty:
+                st.markdown("**Oferentes:**")
+                st.dataframe(oferentes_relacionados[['name', 'address_countryName']])
