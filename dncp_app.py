@@ -80,7 +80,7 @@ elif opcion == "Filtro Avanzado":
 
     # Configuración de AgGrid para filtros avanzados
     gb = GridOptionsBuilder.from_dataframe(licitaciones_filtradas)
-    gb.configure_default_column(editable=False, filter=True, sortable=True, resizable=True)
+    gb.configure_default_column(editable=False, filter=True, sortable=True, resizable=True, autoHeaderHeight=True)
     gb.configure_pagination(enabled=True, paginationAutoPageSize=True)
     grid_options = gb.build()
 
@@ -118,6 +118,7 @@ elif opcion == "Tablas Expandibles":
         with st.expander(f"Proyecto: {row['nombre_proyecto']} (ID: {row['id']})"):
             st.markdown(f"**Criterio:** {row['criterio']}")
             st.markdown(f"**Tipo:** {row['tipo']}")
+            st.markdown(f"**ID DNCP:** {row['id_dncp']}")
             st.markdown(f"**Estimado (GS):** {row['estimado_GS']:,}")
             st.markdown(f"**Adjudicado (GS):** {row['adjudicado_GS']:,}")
 
