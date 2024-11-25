@@ -95,15 +95,17 @@ elif opcion == "Detalles Expansibles":
 elif opcion == "Tablas Expandibles":
     st.title("Tablas Expandibles de Licitaciones")
 
-    # Filtros por año y tipo
+    # Filtros por año y tipo (con opción de "None")
     anio = st.selectbox("Año de la Licitación:", licitaciones['fecha_publicacion'].dt.year.unique())
-    tipo = st.selectbox("Tipo de Licitación:", licitaciones['tipo'].unique())
+    tipos = ["None"] + list(licitaciones['tipo'].unique())
+    tipo = st.selectbox("Tipo de Licitación:", tipos)
 
     # Aplicar filtros
     licitaciones_filtradas = licitaciones[
-        (licitaciones['fecha_publicacion'].dt.year == anio) &
-        (licitaciones['tipo'] == tipo)
+        (licitaciones['fecha_publicacion'].dt.year == anio)
     ]
+    if tipo != "None":
+        licitaciones_filtradas = licitaciones_filtradas[licitaciones_filtradas['tipo'] == tipo]
 
     # Paginación
     page_size = 10
@@ -122,6 +124,14 @@ elif opcion == "Tablas Expandibles":
             st.markdown(f"**Tipo:** {row['tipo']}")
             st.markdown(f"**Estimado (GS):** {row['estimado_GS']}")
             st.markdown(f"**Adjudicado (GS):** {row['adjudicado_GS']}")
+
+            # Enlace de Acta de Apertura
+            acta_data = actas[actas['id'] == row['id']]
+            if not acta_data.empty:
+                acta_url = acta_data.iloc[0]['url']
+                st.markdown(f"**Acta de Apertura:** [Ver Acta]({acta_url})", unsafe_allow_html=True)
+            else:
+                st.warning("No se encontró el Acta de Apertura.")
 
             # Detalles de adjudicados
             adjudicados_relacionados = adjudicado[adjudicado['id'] == row['id']]
