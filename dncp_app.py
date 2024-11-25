@@ -17,15 +17,18 @@ oferentes = load_data('oferentes')
 actas = load_data('actas')
 
 # Menú de navegación
-opcion = st.sidebar.radio(
-    "Selecciona una página:",
-    ["Buscador por ID", "Filtro Avanzado", "Detalles Expansibles", "Tablas Expandibles"]
-)
+with st.sidebar:
+    opcion = st.radio(
+        "Selecciona una página:",
+        ["Buscador por ID", "Filtro Avanzado", "Detalles Expansibles", "Tablas Expandibles"]
+    )
 
 # --- Página: Buscador por ID ---
 if opcion == "Buscador por ID":
     st.title("Buscador por ID de Licitación")
-    id_search = st.text_input("🔍 Ingrese el ID de la Licitación:")
+    
+    with st.sidebar:
+        id_search = st.text_input("🔍 Ingrese el ID de la Licitación:")
 
     if id_search:
         licitacion_data = licitaciones[licitaciones['id'] == id_search]
@@ -54,13 +57,13 @@ if opcion == "Buscador por ID":
 elif opcion == "Filtro Avanzado":
     st.title("Filtro Avanzado de Licitaciones")
     
-    # Asegurar formato correcto de fechas
+    # Filtros en el menú lateral
+    with st.sidebar:
+        tipo = st.selectbox("Selecciona el Tipo de Licitación:", licitaciones['tipo'].unique())
+        min_fecha = st.date_input("Fecha de publicación mínima:", licitaciones['fecha_publicacion'].min().date())
+        max_fecha = st.date_input("Fecha de publicación máxima:", licitaciones['fecha_publicacion'].max().date())
+    
     licitaciones['fecha_publicacion'] = pd.to_datetime(licitaciones['fecha_publicacion'])
-    
-    tipo = st.selectbox("Selecciona el Tipo de Licitación:", licitaciones['tipo'].unique())
-    min_fecha = st.date_input("Fecha de publicación mínima:", licitaciones['fecha_publicacion'].min().date())
-    max_fecha = st.date_input("Fecha de publicación máxima:", licitaciones['fecha_publicacion'].max().date())
-    
     licitaciones_filtradas = licitaciones[
         (licitaciones['tipo'] == tipo) & 
         (licitaciones['fecha_publicacion'].dt.date >= min_fecha) & 
@@ -73,17 +76,15 @@ elif opcion == "Filtro Avanzado":
 # --- Página: Detalles Expansibles ---
 elif opcion == "Detalles Expansibles":
     st.title("Detalles Expansibles de Licitaciones")
-    
-    # Mostrar tabla completa
     st.markdown("### Tabla de Licitaciones")
     licitaciones_table = licitaciones
     st.dataframe(licitaciones_table)
 
-    # Selección de fila
-    fila_seleccionada = st.selectbox("Selecciona un ID de Licitación para Detalles:", licitaciones_table['id'])
+    with st.sidebar:
+        fila_seleccionada = st.selectbox("Selecciona un ID de Licitación para Detalles:", licitaciones_table['id'])
+    
     if fila_seleccionada:
         st.markdown(f"### Detalles para la Licitación ID: {fila_seleccionada}")
-        
         oferentes_relacionados = oferentes[oferentes['id'] == fila_seleccionada]
         st.markdown("**Oferentes:**")
         st.dataframe(oferentes_relacionados[['name', 'address_countryName']])
@@ -96,12 +97,12 @@ elif opcion == "Detalles Expansibles":
 elif opcion == "Tablas Expandibles":
     st.title("Tablas Expandibles de Licitaciones")
 
-    # Filtros por año y tipo (con opción de "None")
-    anio = st.selectbox("Año de la Licitación:", licitaciones['fecha_publicacion'].dt.year.unique())
-    tipos = ["None"] + list(licitaciones['tipo'].unique())
-    tipo = st.selectbox("Tipo de Licitación:", tipos)
+    # Filtros en el menú lateral
+    with st.sidebar:
+        anio = st.selectbox("Año de la Licitación:", licitaciones['fecha_publicacion'].dt.year.unique())
+        tipos = ["None"] + list(licitaciones['tipo'].unique())
+        tipo = st.selectbox("Tipo de Licitación:", tipos)
 
-    # Aplicar filtros
     licitaciones_filtradas = licitaciones[
         (licitaciones['fecha_publicacion'].dt.year == anio)
     ]
@@ -112,21 +113,20 @@ elif opcion == "Tablas Expandibles":
     page_size = 10
     total_rows = len(licitaciones_filtradas)
     total_pages = -(-total_rows // page_size)
-    page = st.number_input("Página:", min_value=1, max_value=total_pages, value=1)
+    with st.sidebar:
+        page = st.selectbox("Selecciona la Página:", range(1, total_pages + 1))
 
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
     licitaciones_paginadas = licitaciones_filtradas.iloc[start_idx:end_idx]
 
-    # Mostrar datos expandibles
     for _, row in licitaciones_paginadas.iterrows():
         with st.expander(f"Proyecto: {row['nombre_proyecto']} (ID: {row['id']})"):
             st.markdown(f"**Criterio:** {row['criterio']}")
             st.markdown(f"**Tipo:** {row['tipo']}")
-            st.markdown(f"**Estimado (GS):** {row['estimado_GS']}")
-            st.markdown(f"**Adjudicado (GS):** {row['adjudicado_GS']}")
+            st.markdown(f"**Estimado (GS):** {row['estimado_GS']:,}")
+            st.markdown(f"**Adjudicado (GS):** {row['adjudicado_GS']:,}")
 
-            # Enlace de Acta de Apertura con Fecha
             acta_data = actas[actas['id'] == row['id']]
             if not acta_data.empty:
                 acta_url = acta_data.iloc[0]['url']
@@ -136,13 +136,11 @@ elif opcion == "Tablas Expandibles":
             else:
                 st.warning("No se encontró el Acta de Apertura.")
 
-            # Detalles de adjudicados
             adjudicados_relacionados = adjudicado[adjudicado['id'] == row['id']]
             if not adjudicados_relacionados.empty:
                 st.markdown("**Adjudicados:**")
                 st.dataframe(adjudicados_relacionados[['name_oferente', 'value_amount_GS']])
 
-            # Detalles de oferentes
             oferentes_relacionados = oferentes[oferentes['id'] == row['id']]
             if not oferentes_relacionados.empty:
                 st.markdown("**Oferentes:**")
