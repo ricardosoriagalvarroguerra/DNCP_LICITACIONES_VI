@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Configuración de la página
 st.set_page_config(page_title="Aplicación de Licitaciones", layout="centered")
@@ -76,7 +77,15 @@ elif opcion == "Filtro Avanzado":
         licitaciones_filtradas = licitaciones_filtradas[licitaciones_filtradas['tipo'] == tipo]
     
     st.markdown(f"### Resultados Filtrados ({len(licitaciones_filtradas)})")
-    st.dataframe(licitaciones_filtradas)
+
+    # Configuración de AgGrid para filtros avanzados
+    gb = GridOptionsBuilder.from_dataframe(licitaciones_filtradas)
+    gb.configure_default_column(editable=False, filter=True, sortable=True, resizable=True)
+    gb.configure_pagination(enabled=True, paginationAutoPageSize=True)
+    grid_options = gb.build()
+
+    # Mostrar la tabla interactiva
+    AgGrid(licitaciones_filtradas, gridOptions=grid_options, height=400, fit_columns_on_grid_load=True)
 
 # --- Página: Tablas Expandibles ---
 elif opcion == "Tablas Expandibles":
@@ -88,7 +97,6 @@ elif opcion == "Tablas Expandibles":
         tipos = ["None"] + list(licitaciones['tipo'].unique())
         tipo = st.selectbox("Tipo de Licitación:", tipos)
 
-    # Aplicar filtros
     licitaciones_filtradas = licitaciones[
         (licitaciones['fecha_publicacion'].dt.year == anio)
     ]
