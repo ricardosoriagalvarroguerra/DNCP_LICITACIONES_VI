@@ -76,11 +76,16 @@ elif opcion == "Filtro Avanzado":
     if tipo != "None":
         licitaciones_filtradas = licitaciones_filtradas[licitaciones_filtradas['tipo'] == tipo]
     
+    # Formatear columnas con separadores de miles
+    licitaciones_filtradas['estimado_GS'] = licitaciones_filtradas['estimado_GS'].apply(lambda x: f"{x:,.0f}")
+    licitaciones_filtradas['adjudicado_GS'] = licitaciones_filtradas['adjudicado_GS'].apply(lambda x: f"{x:,.0f}")
+    
     st.markdown(f"### Resultados Filtrados ({len(licitaciones_filtradas)})")
 
     # Configuración de AgGrid para filtros avanzados
     gb = GridOptionsBuilder.from_dataframe(licitaciones_filtradas)
     gb.configure_default_column(editable=False, filter=True, sortable=True, resizable=True, autoHeaderHeight=True)
+    gb.configure_auto_height(autoHeaderHeight=True)
     gb.configure_pagination(enabled=True, paginationAutoPageSize=True)
     grid_options = gb.build()
 
@@ -113,6 +118,9 @@ elif opcion == "Tablas Expandibles":
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
     licitaciones_paginadas = licitaciones_filtradas.iloc[start_idx:end_idx]
+
+    # Formatear `id_dncp` para mostrar sin decimales
+    licitaciones_paginadas['id_dncp'] = licitaciones_paginadas['id_dncp'].astype(int)
 
     for _, row in licitaciones_paginadas.iterrows():
         with st.expander(f"Proyecto: {row['nombre_proyecto']} (ID: {row['id']})"):
