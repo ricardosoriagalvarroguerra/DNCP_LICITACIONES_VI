@@ -21,11 +21,41 @@ actas = load_data('actas')
 with st.sidebar:
     opcion = st.radio(
         "Selecciona una página:",
-        ["Filtro Avanzado", "Tablas Expandibles"]
+        ["Buscador por ID", "Filtro Avanzado", "Tablas Expandibles"]
     )
 
+# --- Página: Buscador por ID ---
+if opcion == "Buscador por ID":
+    st.title("Buscador por ID de Licitación")
+    
+    with st.sidebar:
+        id_search = st.text_input("🔍 Ingrese el ID de la Licitación:")
+
+    if id_search:
+        licitacion_data = licitaciones[licitaciones['id'] == id_search]
+        if not licitacion_data.empty:
+            st.markdown("### Información de la Licitación")
+            st.write(f"**Proyecto:** {licitacion_data.iloc[0]['nombre_proyecto']}")
+            st.write(f"**Criterio:** {licitacion_data.iloc[0]['criterio']}")
+            st.write(f"**Tipo:** {licitacion_data.iloc[0]['tipo']}")
+            st.write(f"**Monto Estimado (GS):** {licitacion_data.iloc[0]['estimado_GS']:,}")
+            st.write(f"**Monto Adjudicado (GS):** {licitacion_data.iloc[0]['adjudicado_GS']:,}")
+            st.write(f"**Cantidad de Oferentes:** {licitacion_data.iloc[0]['oferentes_cantidad']}")
+            st.write(f"**Cantidad de Lotes:** {licitacion_data.iloc[0]['cant_lotes']}")
+
+            acta_data = actas[actas['id'] == id_search]
+            if not acta_data.empty:
+                acta_url = acta_data.iloc[0]['url']
+                date_published = acta_data.iloc[0]['datePublished']
+                st.markdown(f"**Fecha de Publicación del Acta:** {date_published}")
+                st.markdown(f"[Ver Acta]({acta_url})", unsafe_allow_html=True)
+            else:
+                st.warning("No se encontró el Acta de Apertura.")
+        else:
+            st.warning("No se encontró información para el ID proporcionado.")
+
 # --- Página: Filtro Avanzado ---
-if opcion == "Filtro Avanzado":
+elif opcion == "Filtro Avanzado":
     st.title("Filtro Avanzado de Licitaciones")
     
     # Filtros en el menú lateral
