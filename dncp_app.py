@@ -42,8 +42,9 @@ if opcion == "Buscador por ID":
             acta_data = actas[actas['id'] == id_search]
             if not acta_data.empty:
                 acta_url = acta_data.iloc[0]['url']
-                if st.button("Abrir Acta de Apertura"):
-                    st.markdown(f"[Ver Acta]({acta_url})", unsafe_allow_html=True)
+                date_published = acta_data.iloc[0]['datePublished']
+                st.markdown(f"**Fecha de Publicación del Acta:** {date_published}")
+                st.markdown(f"[Ver Acta]({acta_url})", unsafe_allow_html=True)
             else:
                 st.warning("No se encontró el Acta de Apertura.")
         else:
@@ -125,10 +126,12 @@ elif opcion == "Tablas Expandibles":
             st.markdown(f"**Estimado (GS):** {row['estimado_GS']}")
             st.markdown(f"**Adjudicado (GS):** {row['adjudicado_GS']}")
 
-            # Enlace de Acta de Apertura
+            # Enlace de Acta de Apertura con Fecha
             acta_data = actas[actas['id'] == row['id']]
             if not acta_data.empty:
                 acta_url = acta_data.iloc[0]['url']
+                date_published = acta_data.iloc[0]['datePublished']
+                st.markdown(f"**Fecha de Publicación del Acta:** {date_published}")
                 st.markdown(f"**Acta de Apertura:** [Ver Acta]({acta_url})", unsafe_allow_html=True)
             else:
                 st.warning("No se encontró el Acta de Apertura.")
