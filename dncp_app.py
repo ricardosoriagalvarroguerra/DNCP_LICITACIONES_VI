@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 
+# Configuración de la página: debe ser la primera instrucción
+st.set_page_config(page_title="Buscador de Licitaciones", layout="centered")
+
 # Función para cargar datos con caché
 @st.cache_data
 def load_data(sheet_name):
@@ -14,9 +17,6 @@ oferentes = load_data('oferentes')
 actas = load_data('actas')
 
 # Estilo general de la página
-st.set_page_config(page_title="Buscador de Licitaciones", layout="centered")
-
-# Título de la app
 st.markdown(
     """
     <div style="text-align: center;">
