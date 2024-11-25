@@ -1,12 +1,16 @@
 import streamlit as st
 import pandas as pd
 
-# Cargar las hojas de cálculo
-file_path = 'BDD_DNCP_FINAL.xlsx'
-licitaciones = pd.read_excel(file_path, sheet_name='licitaciones')
-adjudicado = pd.read_excel(file_path, sheet_name='adjudicado')
-lotes = pd.read_excel(file_path, sheet_name='lotes')
-oferentes = pd.read_excel(file_path, sheet_name='oferentes')
+# Función para cargar datos con caché
+@st.cache_data
+def load_data(sheet_name):
+    return pd.read_excel('BDD_DNCP_FINAL.xlsx', sheet_name=sheet_name)
+
+# Cargar las hojas de cálculo con caché
+licitaciones = load_data('licitaciones')
+adjudicado = load_data('adjudicado')
+lotes = load_data('lotes')
+oferentes = load_data('oferentes')
 
 # Título de la app
 st.title("Buscador de Licitaciones")
